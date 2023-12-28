@@ -1,0 +1,16 @@
+import time
+
+Password_to_Crack = 123456
+
+def Crack_Password(Password_to_Crack):
+
+
+
+
+    def main():
+        print("Hello")
+
+
+
+    if __name__ == "__Main__":
+            main()
