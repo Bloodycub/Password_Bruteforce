@@ -1,0 +1,59 @@
+import asyncio
+import concurrent.futures
+import random
+import string
+import os
+import multiprocessing
+
+file_path = "Passwords.txt"
+
+def initialize_existing_passwords(): # Read and Load Passwords
+    existing_passwords = set() # Password are stored in Array
+    if os.path.isfile(file_path): # Finds File Location
+        with open(file_path, "r") as file: # Opens File and In Read Mode
+            existing_passwords = set(line.strip() for line in file) # Deletes Whitespaces and \n b4 and after From Each Line and Fills it with {existing_passwords[]}
+    return existing_passwords # Returns Password
+
+existing_passwords_set = initialize_existing_passwords() #Get Array List With Passwords
+
+def password_exists(password): # Check if {password} Exsists in existing_passwords_set
+    return password in existing_passwords_set
+
+def save_password_batch(passwords): # Saving batch of {passwords} in file
+    with open(file_path, "a") as file: # Opens file and Types in file
+        for password in passwords: # Looping all Passwords in {passwords}
+            if not password_exists(password): # If Password not Existing Start Writing
+                file.write(f"{password}\n") # Write Passowrd in file
+                existing_passwords_set.add(password) # Add Password in existing_password_set
+
+def generate_password(): # Generates Password
+    length = 6 # Lenght of 6
+    return ''.join(random.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(length)) # Joins Random Lethers,Symbols,Numbers
+
+def generate_and_save_sync(passwords_per_batch):
+    passwords = [generate_password() for _ in range(passwords_per_batch)] # Generates Passwords
+    save_password_batch(passwords) # Write Passwords to File
+
+def generate_and_save_passwords_batch(passwords_per_batch):
+    num_workers = min(multiprocessing.cpu_count() * 1000000, 2000000) # Number of workers Taking Amount of cores * min value and max value
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor: # Crates Worker
+        executor.submit(generate_and_save_sync, passwords_per_batch) # Submits task to pool and start Saving Passwords
+
+async def generate_and_save_passwords_batch_async(passwords_per_batch): #  defines an asynchronous function
+    loop = asyncio.get_event_loop() # Gets The Current Asyncio Event loop
+    await loop.run_in_executor(None, generate_and_save_passwords_batch, passwords_per_batch)
+
+async def main_async():
+    loop_times = 0 # How Many times loop has been looped
+    total_loops = 5000 # How Many loop Should Be Exicuted ## Change this value for Max Loops
+    passwords_per_batch = 10000 # Batch of Passwords in Single Loop ## Change This value of password amout in single loop
+
+    while loop_times < total_loops: # if Loop_Time less than Total Loops Loops this
+        print(f"Generating passwords. Loop {loop_times + 1}/{total_loops}") # Printing Loop amount
+        await generate_and_save_passwords_batch_async(passwords_per_batch) # Generate Batch and Saves it
+        loop_times += 1 # Increse Loop_Time by 1++
+
+    print("Password Generation Done.")
+
+if __name__ == "__main__":
+    asyncio.run(main_async()) # Runs Main Block
