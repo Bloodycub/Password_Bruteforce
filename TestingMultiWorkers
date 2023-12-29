@@ -44,8 +44,15 @@ async def generate_and_save_passwords_batch_async(passwords_per_batch): #  defin
     await loop.run_in_executor(None, generate_and_save_passwords_batch, passwords_per_batch)
 
 async def main_async():
+    while True:
+        try:
+            userinput = int(input("How many generate passwords? 1 = 10,000 : "))
+            break
+        except ValueError:
+            print("Input number")
+
     loop_times = 0 # How Many times loop has been looped
-    total_loops = 5000 # How Many loop Should Be Exicuted ## Change this value for Max Loops
+    total_loops = userinput # How Many loop Should Be Exicuted ## Change this value for Max Loops
     passwords_per_batch = 10000 # Batch of Passwords in Single Loop ## Change This value of password amout in single loop
 
     while loop_times < total_loops: # if Loop_Time less than Total Loops Loops this
